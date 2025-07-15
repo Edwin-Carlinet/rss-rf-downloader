@@ -7,6 +7,7 @@ import os
 import threading
 import sys
 from pathlib import Path
+import unicodedata
 
 class RSSDownloaderApp:
     def __init__(self, root):
@@ -45,6 +46,12 @@ class RSSDownloaderApp:
         if folder:
             self.dest_path.set(folder)
 
+    def make_safe_path(self, s):
+        # Remplace les caractères non latin-1 par '_', enlève les caractères spéciaux
+        s = unicodedata.normalize('NFKD', str(s))
+        safe = ''.join(c if c.isascii() and c.isalnum() else '_' for c in s)
+        return safe
+
     def load_feed(self):
         url = self.feed_url.get()
         if not url:
@@ -58,7 +65,7 @@ class RSSDownloaderApp:
             # Correction d'accès au titre du podcast (FeedParserDict)
             podcast_title = getattr(feed.feed, 'title', None)
             if isinstance(podcast_title, str):
-                self.podcast_title = podcast_title.strip().replace('/', '_').replace('\\', '_')
+                self.podcast_title = self.make_safe_path(podcast_title)
             for entry in feed.entries:
                 self.entries.append(entry)
                 entry_title = getattr(entry, 'title', None)
@@ -78,7 +85,7 @@ class RSSDownloaderApp:
         threading.Thread(target=self.download_selected, daemon=True).start()
 
     def download_selected(self):
-        podcast_folder = os.path.join(self.dest_path.get(), str(self.podcast_title))
+        podcast_folder = os.path.join(self.dest_path.get(), self.make_safe_path(self.podcast_title))
         os.makedirs(podcast_folder, exist_ok=True)
         total = len(self.selected_indices)
         for i, idx in enumerate(self.selected_indices):
@@ -107,7 +114,7 @@ class RSSDownloaderApp:
         try:
             response = requests.get(url, stream=True)
             if response.status_code == 200:
-                safe_title = str(title).strip().replace('/', '_').replace('\\', '_')
+                safe_title = self.make_safe_path(title)
                 temp_path = os.path.join(folder, f"{prefix}{safe_title}.tmp")
                 total_length = int(response.headers.get('content-length', 0))
                 downloaded = 0
