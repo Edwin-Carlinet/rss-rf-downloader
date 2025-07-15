@@ -1,0 +1,22 @@
+[project]
+name = "rss-rf-downloader"
+description = "Application graphique pour télécharger et convertir des chansons d'un flux RSS en MP3."
+authors = [{ name = "edwin", email = "edwin.carlinet@gmail.com"} ]
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "audioop-lts>=0.2.1",
+    "feedparser>=6.0.11",
+    "pydub>=0.25.1",
+    "requests>=2.32.4",
+]
+
+[tool.uv]
+
+
+[project.optional-dependencies]
+dev = []
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
